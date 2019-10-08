@@ -8,8 +8,8 @@ namespace cli {
 	template<typename T>	
 	class RequiredArgument : public ValuedArgument<T> {
 		public:
-			RequiredArgument(const std::string &argument_label, char argument_abbreviation='\0') 
-				:	ValuedArgument<T>(argument_label, argument_abbreviation) {}
+			RequiredArgument(const string &argument_label, char argument_abbreviation='\0', const string &description="required") 
+				:	ValuedArgument<T>(argument_label, description, argument_abbreviation) {}
 
 			bool is_required (void) const {
 				return true;
@@ -20,8 +20,8 @@ namespace cli {
 	template<typename T>
 	class OptionalArgument : public ValuedArgument<T> {
 		public:
-			OptionalArgument(const std::string &argument_label, const T& default_value, char argument_abbreviation='\0')
-			   :	ValuedArgument<T>(argument_label, argument_abbreviation)
+			OptionalArgument(const T& default_value, const string &argument_label, char argument_abbreviation='\0', const string &description="optional")
+			   :	ValuedArgument<T>(argument_label, description, argument_abbreviation)
 			{
 				this->value = default_value;
 			}
@@ -34,7 +34,7 @@ namespace cli {
 
 	class FlagArgument : public UnvaluedArgument {
 		public:
-			FlagArgument(const std::string &argument_label, char argument_abbreviation='\0');
+			FlagArgument(const string &argument_label, char argument_abbreviation='\0', const string &description="flag");
 
 			bool is_required(void) const;
 
@@ -43,9 +43,9 @@ namespace cli {
 
 	class FunctionArgument : public UnvaluedArgument {
 		private:
-			::std::function<void(void)> function;
+			function<void(void)> execute;
 		public:
-			FunctionArgument(const decltype(function) &function, const std::string &argument_label, char argument_abbreviation='\0');
+			FunctionArgument(const decltype(execute) &function_to_execute, const string &argument_label, char argument_abbreviation='\0', const string &description="optional execution flow");
 
 			bool is_required(void) const;
 			void set_as_present(void);

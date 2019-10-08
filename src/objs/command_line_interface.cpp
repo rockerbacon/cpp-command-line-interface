@@ -6,6 +6,7 @@ using namespace std;
 using namespace cli;
 
 unordered_map<string, ArgumentInterface*> cli::argument_map;
+stringstream cli::arguments_help_message;
 
 void cli::capture_all_arguments_from(int argc, char **argv) {
 	int i = 1;

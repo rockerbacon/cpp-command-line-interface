@@ -11,6 +11,8 @@
 
 namespace cli {
 
+	using namespace ::std;
+
 	class ArgumentInterface {
 		public:
 			virtual void read_value_from(const char* arg) = 0;
@@ -20,13 +22,14 @@ namespace cli {
 			virtual void set_as_present(void) = 0;
 	};
 
-	extern ::std::unordered_map<::std::string, ArgumentInterface*> argument_map;
+	extern unordered_map<string, ArgumentInterface*> argument_map;
+	extern stringstream arguments_help_message;
 
 	class Argument : public ArgumentInterface {
 		protected:
 			bool present;
 		public:
-			Argument(const std::string &argument_label, char argument_abbreviation='\0');
+			Argument(const string &argument_label, const string &description, char argument_abbreviation='\0');
 
 			virtual bool is_present (void) const;
 			virtual void set_as_present(void);
@@ -37,8 +40,8 @@ namespace cli {
 		protected:
 			T value;
 		public:
-			ValuedArgument(const std::string &argument_label, char argument_abbreviation='\0')
-				:	Argument(argument_label, argument_abbreviation)
+			ValuedArgument(const string &argument_label, const string &description, char argument_abbreviation='\0')
+				:	Argument(argument_label, description, argument_abbreviation)
 			{}
 
 			virtual T& operator* (void) {
@@ -58,7 +61,7 @@ namespace cli {
 				std::istringstream stream(arg);
 				stream >> this->value;
 				if (stream.fail()) {
-					throw std::invalid_argument("Could not parse '"+std::string(arg)+"' to the correct type");
+					throw invalid_argument("Could not parse '"+string(arg)+"' to the correct type");
 				}
 				this->present = true;
 			}
@@ -70,7 +73,7 @@ namespace cli {
 
 	class UnvaluedArgument : public Argument {
 		public:
-			UnvaluedArgument(const std::string &argument_label, char argument_abbreviation='\0');
+			UnvaluedArgument(const string &argument_label, const string &description, char argument_abbreviation='\0');
 		
 			void read_value_from(UNUSED const char *arg);
 			bool requires_value(void) const;

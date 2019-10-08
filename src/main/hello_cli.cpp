@@ -5,9 +5,9 @@ using namespace std;
 
 int main (int argc, char **argv) {
 
-	cli::RequiredArgument<string> first_name("first-name");
-	cli::OptionalArgument<string> second_name("second-name", "", 's');
-	cli::OptionalArgument<unsigned> age("age", 0);
+	cli::RequiredArgument<string> first_name("first-name", '\0', "your first name");
+	cli::OptionalArgument<string> second_name("", "second-name", 's');
+	cli::OptionalArgument<unsigned> age(0, "age");
 	cli::FlagArgument knows_assertion("knows-assertion");
 
 	cli::HelpArgument help;
