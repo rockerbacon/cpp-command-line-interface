@@ -1,28 +1,11 @@
 #include "command_line_interface.h"
 
+#include <iostream>
+
 using namespace std;
 using namespace cli;
 
 unordered_map<string, ArgumentInterface*> cli::argument_map;
-
-FlagArgument::FlagArgument(const std::string &argument_label, char argument_abbreviation)
-	:	Argument<bool>(argument_label, argument_abbreviation)
-{
-	this->value = false;
-}
-
-bool FlagArgument::is_required(void) {
-	return false;
-}
-
-bool FlagArgument::requires_value(void) {
-	return false;
-}
-
-void FlagArgument::set_as_present(void) {
-	this->present = true;
-	this->value = true;
-}
 
 void cli::capture_all_arguments_from(int argc, char **argv) {
 	int i = 1;

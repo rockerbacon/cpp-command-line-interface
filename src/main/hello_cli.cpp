@@ -10,6 +10,8 @@ int main (int argc, char **argv) {
 	cli::OptionalArgument<unsigned> age("age", 0);
 	cli::FlagArgument knows_assertion("knows-assertion");
 
+	cli::HelpArgument help;
+
 	cli::capture_all_arguments_from(argc, argv);
 
 	cout << "Hello " << *first_name << ' ' << *second_name << endl;
