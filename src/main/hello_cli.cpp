@@ -13,8 +13,9 @@ cli_entry_point {
 	using namespace cli;
 
 	cli_arguments (
-		RequiredArgument<string> first_name("first-name", '\0', "your first name");
-		OptionalArgument<string> second_name("", "second-name", 's');
+		RequiredArgument<string> first_name("first-name", "your first name");
+		OptionalArgument<string> second_name("", "second-name");
+		create_alias("second-name", 's');
 		OptionalArgument<unsigned> age(0, "age");
 		FlagArgument knows_assertion("knows-assertion");
 	);

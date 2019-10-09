@@ -6,7 +6,7 @@ using namespace std;
 using namespace cli;
 
 unordered_map<string, ArgumentInterface*> cli::argument_map;
-stringstream cli::arguments_help_message;
+unordered_map<string, string> cli::argument_help_map;
 
 void cli::capture_all_arguments_from(int argc, char **argv) {
 	int i = 1;
@@ -49,4 +49,36 @@ void cli::capture_all_arguments_from(int argc, char **argv) {
 		}
 	}
 
+}
+
+void create_alias_helper(const string &existing_label, const string &prefixed_existing_label, const string &alias, const string &prefixed_alias) {
+
+	auto existing_argument = cli::argument_map.find(prefixed_existing_label);
+	if (existing_argument == cli::argument_map.end()) {
+		throw invalid_argument("Argument " + existing_label + " not previously declared");
+	}
+
+	if (cli::argument_map.find(prefixed_alias) != cli::argument_map.end()) {
+		throw invalid_argument("Redeclaration of argument '" + alias + "'");
+	}
+	cli::argument_map[prefixed_alias] = existing_argument->second;
+
+	auto argument_help = cli::argument_help_map.find(prefixed_existing_label);
+	if (argument_help == cli::argument_help_map.end()) {
+		throw invalid_argument("Cannot create alias to another alias: '"+existing_label+"'");
+	}
+	argument_help->second = prefixed_alias + ", " + argument_help->second;
+}
+
+void cli::create_alias(const string &existing_label, const string &alias) {
+	string prefixed_existing_label = "--"+existing_label;
+	string prefixed_alias = "--"+alias;
+	create_alias_helper(existing_label, prefixed_existing_label, alias, prefixed_alias);
+}
+
+void cli::create_alias(const string &existing_label, char alias) {
+	string prefixed_existing_label = "--"+existing_label;
+	string str_alias = string(1, alias);
+	string prefixed_alias = "-" + str_alias;
+	create_alias_helper(existing_label, prefixed_existing_label, str_alias, prefixed_alias);
 }

@@ -3,30 +3,17 @@
 
 using namespace cli;
 
-Argument::Argument(const std::string &argument_label, const string &description, char argument_abbreviation) 
+Argument::Argument(const std::string &argument_label, const string &description)
 	:	present(false)
 {
 	string prefixed_label = "--" + argument_label;
 
 	if (cli::argument_map.find(prefixed_label) != cli::argument_map.end()) {
-		throw invalid_argument("Cannot define two arguments with the same label");
+		throw invalid_argument("Redeclaration of argument '" + argument_label + "'");
 	}
 	cli::argument_map[prefixed_label] = this;
 
-	cli::arguments_help_message << '\t' << prefixed_label;
-
-	if (argument_abbreviation != '\0') {
-		string prefixed_abbreviation = "-" + string(1, argument_abbreviation);
-
-		if (cli::argument_map.find(prefixed_abbreviation) != cli::argument_map.end()) {
-			throw invalid_argument("Cannot define two arguments with the same abbreviation");
-		}
-		cli::argument_map[prefixed_abbreviation] = this;
-
-		cli::arguments_help_message << ", " << prefixed_abbreviation;
-	}
-
-	cli::arguments_help_message << ": " << description << endl;
+	cli::argument_help_map[prefixed_label] = prefixed_label + ": " + description;
 
 }
 
@@ -38,8 +25,8 @@ void Argument::set_as_present(void) {
 	this->present = true;
 }
 
-UnvaluedArgument::UnvaluedArgument(const std::string &argument_label, const string &description, char argument_abbreviation)
-	:	Argument(argument_label, description, argument_abbreviation)
+UnvaluedArgument::UnvaluedArgument(const std::string &argument_label, const string &description)
+	:	Argument(argument_label, description)
 {}
 
 void UnvaluedArgument::read_value_from(UNUSED const char *arg) {

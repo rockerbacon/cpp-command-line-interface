@@ -4,8 +4,8 @@
 
 using namespace cli;
 
-FlagArgument::FlagArgument(const std::string &argument_label, char argument_abbreviation, const string &description)
-	:	UnvaluedArgument(argument_label, description, argument_abbreviation)
+FlagArgument::FlagArgument(const std::string &argument_label, const string &description)
+	:	UnvaluedArgument(argument_label, description)
 {}
 
 bool FlagArgument::is_required(void) const {
@@ -16,8 +16,8 @@ bool FlagArgument::operator*(void) const {
 	return this->is_present();
 }
 
-FunctionArgument::FunctionArgument(const decltype(execute) &function_to_execute, const string &argument_label, char argument_abbreviation, const string &description)
-	:	UnvaluedArgument(argument_label, description, argument_abbreviation),
+FunctionArgument::FunctionArgument(const decltype(execute) &function_to_execute, const string &argument_label, const string &description)
+	:	UnvaluedArgument(argument_label, description),
 		execute(function_to_execute)
 {}
 
@@ -36,11 +36,13 @@ HelpArgument::HelpArgument(void)
 		cout << cli::this_program.description << endl << endl;
 		cout << "Usage: " << cli::this_program.title << " [OPTIONS...]" << endl;
 		cout << "OPTIONS:" << endl;
-		cout << cli::arguments_help_message.rdbuf();
+		for (auto arg_help : argument_help_map) {
+			cout << '\t' << arg_help.second << endl;
+		}
 
 		exit(0);
 
-	}, "help", 'h', "print this help message")
+	}, "help", "print this help message")
 {}
 
 VersionArgument::VersionArgument(void)
@@ -50,5 +52,5 @@ VersionArgument::VersionArgument(void)
 
 		exit(0);
 
-	}, "version", 'v', "print program version")
+	}, "version", "print program version")
 {}
