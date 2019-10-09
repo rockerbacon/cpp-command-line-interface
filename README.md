@@ -20,7 +20,7 @@ CLI utilizes a macro which automatically generates your program's entry point:
 #include <iostream>
 
 cli_main(
-	// program description
+	// program information
 	"string with program name",
 	"string with program version",
 	"string with progarm description",
