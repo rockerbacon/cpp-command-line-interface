@@ -34,7 +34,7 @@ HelpArgument::HelpArgument(void)
 
 		cout << cli::this_program.title << ' ' << cli::this_program.version << endl;
 		cout << cli::this_program.description << endl << endl;
-		cout << "Usage: " << "pname" << " [OPTIONS...]" << endl;
+		cout << "Usage: " << cli::this_program.title << " [OPTIONS...]" << endl;
 		cout << "OPTIONS:" << endl;
 		cout << cli::arguments_help_message.rdbuf();
 

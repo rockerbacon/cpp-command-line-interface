@@ -3,6 +3,26 @@
 #include "base_arguments.h"
 #include <functional>
 
+#define cli_program(title_arg) cli::this_program.title = title_arg;
+#define cli_version(version_arg) cli::this_program.version = version_arg;
+#define cli_description(description_arg) cli::this_program.description = description_arg;
+
+#define cli_describe(cli_program_name, cli_program_version, cli_program_description) \
+	const decltype(cli::this_program) cli::this_program {\
+		cli_program_name,\
+		cli_program_version,\
+		cli_program_description\
+	};
+
+#define cli_entry_point \
+	int main (int argc, char **argv)
+
+#define cli_arguments(...) \
+	__VA_ARGS__ \
+	cli::HelpArgument cli_help_argument; \
+	cli::VersionArgument cli_version_argument; \
+	cli::capture_all_arguments_from(argc, argv);
+
 namespace cli {
 
 	extern const struct Program {
