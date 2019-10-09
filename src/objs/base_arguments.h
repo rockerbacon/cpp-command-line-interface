@@ -23,13 +23,13 @@ namespace cli {
 	};
 
 	extern unordered_map<string, ArgumentInterface*> argument_map;
-	extern stringstream arguments_help_message;
+	extern unordered_map<string, string> argument_help_map;
 
 	class Argument : public ArgumentInterface {
 		protected:
 			bool present;
 		public:
-			Argument(const string &argument_label, const string &description, char argument_abbreviation='\0');
+			Argument(const string &argument_label, const string &description);
 
 			virtual bool is_present (void) const;
 			virtual void set_as_present(void);
@@ -40,8 +40,8 @@ namespace cli {
 		protected:
 			T value;
 		public:
-			ValuedArgument(const string &argument_label, const string &description, char argument_abbreviation='\0')
-				:	Argument(argument_label, description, argument_abbreviation)
+			ValuedArgument(const string &argument_label, const string &description)
+				:	Argument(argument_label, description)
 			{}
 
 			virtual T& operator* (void) {
@@ -73,7 +73,7 @@ namespace cli {
 
 	class UnvaluedArgument : public Argument {
 		public:
-			UnvaluedArgument(const string &argument_label, const string &description, char argument_abbreviation='\0');
+			UnvaluedArgument(const string &argument_label, const string &description);
 		
 			void read_value_from(UNUSED const char *arg);
 			bool requires_value(void) const;
