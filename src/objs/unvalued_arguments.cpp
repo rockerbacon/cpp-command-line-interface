@@ -42,3 +42,13 @@ HelpArgument::HelpArgument(void)
 
 	}, "help", 'h', "print this help message")
 {}
+
+VersionArgument::VersionArgument(void)
+	:	FunctionArgument([&]() {
+		
+		cout << cli::this_program.version << endl;
+
+		exit(0);
+
+	}, "version", 'v', "print program version")
+{}

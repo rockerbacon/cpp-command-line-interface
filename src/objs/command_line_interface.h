@@ -5,13 +5,11 @@
 
 namespace cli {
 
-	struct Program {
+	extern const struct Program {
 		string title;
 		string version;
 		string description;
-	};
-
-	extern Program this_program;
+	} this_program;
 
 	template<typename T>	
 	class RequiredArgument : public ValuedArgument<T> {
@@ -62,6 +60,11 @@ namespace cli {
 	class HelpArgument : public FunctionArgument {
 		public:
 			HelpArgument(void);
+	};
+
+	class VersionArgument : public FunctionArgument {
+		public:
+			VersionArgument(void);
 	};
 
 	void capture_all_arguments_from(int argc, char **argv);

@@ -3,7 +3,7 @@
 
 using namespace std;
 
-cli::Program cli::this_program {
+const decltype(cli::this_program) cli::this_program {
 	"hello_cli",
 	"v1.0 beta",
 	"This is a simple example program for CPP CLI"
@@ -17,7 +17,7 @@ int main (int argc, char **argv) {
 	cli::FlagArgument knows_assertion("knows-assertion");
 
 	cli::HelpArgument help;
-	//cli::VersionArgument version;
+	cli::VersionArgument version;
 
 	cli::capture_all_arguments_from(argc, argv);
 
