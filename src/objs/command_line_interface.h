@@ -5,6 +5,14 @@
 
 namespace cli {
 
+	struct Program {
+		string title;
+		string version;
+		string description;
+	};
+
+	extern Program this_program;
+
 	template<typename T>	
 	class RequiredArgument : public ValuedArgument<T> {
 		public:

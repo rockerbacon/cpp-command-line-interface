@@ -32,6 +32,8 @@ void FunctionArgument::set_as_present(void) {
 HelpArgument::HelpArgument(void)
 	:	FunctionArgument([&]() {
 
+		cout << cli::this_program.title << ' ' << cli::this_program.version << endl;
+		cout << cli::this_program.description << endl << endl;
 		cout << "Usage: " << "pname" << " [OPTIONS...]" << endl;
 		cout << "OPTIONS:" << endl;
 		cout << cli::arguments_help_message.rdbuf();
