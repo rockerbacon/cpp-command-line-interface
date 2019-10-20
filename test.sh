@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SUCCESSFUL_TESTS=0
-FAILED_TESTS=0
+export PROJECT_ROOT=$(realpath $(dirname $0))
+TESTS_SRC_DIR="$PROJECT_ROOT/tests"
 
 default_text_color=7	#color used to reset terminal text to default color. 0 will reset to black and 7 to white. See the tput command documentation for other colors
 red_color=`tput setaf 1`
@@ -10,93 +10,94 @@ reset_color=`tput setaf $default_text_color`
 up_line=`tput cuu 1`
 clear_line=`tput el 1`
 
-SCRIPT_DIR=$(realpath $(dirname $0))
-TESTS_DIR="$SCRIPT_DIR/tests"
-BUILD_DIR="$SCRIPT_DIR/build"
-
-determine_current_test_full_name () {
-	ESCAPED_TESTS_DIR=$(echo $TESTS_DIR | sed 's/\//\\\//g; s/\./\\\./g')
-	ESCAPED_BUILD_DIR=$(echo $TEST_BUILD_DIR | sed 's/\//\\\//g; s/\./\\\./g')
-	TEST_NAME=$(echo $CURRENT_TEST | sed "s/^${ESCAPED_TESTS_DIR}\///; s/^${ESCAPED_BUILD_DIR}\///;" | sed "s/^test_//; s/.cpp$//")
-	TEST_FULL_NAME="test_${TEST_NAME}"
+############## Command Line Interface ################
+print_help () {
+	echo "Help:"
+	echo "Execute tests and give a summary of the test results"
+	echo
+	echo "Usage: ./test.sh [LIST OF TESTS]"
+	echo " - If no test is specified then all tests will be executed"
+	echo " - Tests must be space separated"
+	echo " - A test is any source file (with or without the .cpp suffix) or folder inside ./tests. The folder suffix 'tests/' is optional. Eg:"
+	echo "	* './test.sh some_test.cpp' will execute the tests defined inside ./tests/some_test.cpp"
+	echo "	* './test.sh many_tests' will recursively execute all tests inside the folder ./tests/many_tests/"
 }
 
-determine_current_test_source_file () {
-	TEST_SOURCE_FILE="${TESTS_DIR}/${TEST_FULL_NAME}.cpp"
-}
-
-determine_current_test_binary_file () {
-	TEST_BINARY_FILE="${BUILD_DIR}/${TEST_FULL_NAME}"
-}
-
-if [ "$#" -gt 0 ] && [ "$1" != "all" ]; then
-	TESTS=$1
+if [ "$1" == "--help" ]; then
+	print_help
+	exit 0
+elif [ "$#" -gt 0 ] && [ "$1" != "all" ]; then
+	TESTS=("$1")
 	shift
 	until [ -z "$1" ]
 	do
-		TESTS="${TESTS} ${1}"
+		TESTS+=("$1")
 		shift
 	done
 else
-	TESTS="${TESTS_DIR}/*.cpp"
+	TESTS=("${TESTS_SRC_DIR}")
 fi
+############## Command Line Interface ################
 
-FAILED_TESTS=0
-SUCCESSFUL_TESTS=0
-IGNORED_TESTS=0
+add_tests_from_directory () {
+	TESTS_IN_FOLDER="${CURRENT_TEST}/*"
+	for INNER_TEST in $TESTS_IN_FOLDER
+	do
+		TESTS+=("$INNER_TEST")
+	done
+}
 
-"$SCRIPT_DIR/build.sh" --cmake-only
+next_test () {
+	CURRENT_TEST="${TESTS[0]}"
+	TESTS=("${TESTS[@]:1}")
+}
 
-echo	# line feed
-echo "-------------------INDIVIDUAL TESTS-------------------"
-for CURRENT_TEST in $TESTS
+determine_successful_tests_this_run () {
+	SUCCESSFUL_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep -oe "\"successful_tests\":[0-9]*" | sed "s/\"successful_tests\"://")
+}
+
+exec 3>&1 # save stdout address
+
+TOTAL_FAILED_TESTS=0
+TOTAL_SUCCESSFUL_TESTS=0
+until [ "${TESTS[0]}" == "" ]
 do
+	next_test
 
-	determine_current_test_full_name
-	echo "Testing ${TEST_NAME}..."
-	if [ -d "${TESTS_DIR}/${CURRENT_TEST}" ]; then
-		echo "Executing tests from specific folder not yet supported"
+	if [ -d "$CURRENT_TEST" ]; then
+		add_tests_from_directory
 	else
-		determine_current_test_source_file
-		determine_current_test_binary_file
-		if [ -f "$TEST_SOURCE_FILE" ]; then
-
-			"$SCRIPT_DIR/build.sh" --no-cmake  $TEST_FULL_NAME
-
-			BUILD_STATUS=$?
-			if [ $BUILD_STATUS -eq 0 ]; then
-				TEST_OUTPUT=$($TEST_BINARY_FILE)
-				TEST_SUCCESSES=$(echo $TEST_OUTPUT | grep -o "' OK" | wc -l)
-				TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o "' failed:" | wc -l)
-				SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS + $TEST_SUCCESSES`
-				FAILED_TESTS=`expr $FAILED_TESTS + $TEST_FAILURES`
-				echo "	${TEST_OUTPUT}" | tr '\n' '\032' | sed -e $(echo -e 's/\032/\\n\\t/g')
-			else
-				echo "	${red_color}build failed for ${TEST_SOURCE_FILE}${reset_color}"
-				FAILED_TESTS=`expr $FAILED_TESTS + 1`
-			fi
+		BUILD_OUTPUT=$(./build.sh target "$CURRENT_TEST" 2>&1)
+		BUILD_STATUS="$?"
+		if [ ! "$BUILD_STATUS" -eq 0 ]; then
+			echo "${red_color}Build failed:${reset_color}"
+			echo "$BUILD_OUTPUT"
+			TOTAL_FAILED_TESTS_THIS_RUN=$(grep -oe 'test_case( )*\(' "$TEST_SOURCE_PATH" | wc -l)
+			TOTAL_FAILED_TESTS=`expr $TOTAL_FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
 		else
-			echo "${red_color}no source file ${TEST_SOURCE_FILE}${reset_color}"
+			TEST_STDERR_OUTPUT=$(./run.sh --full-output "$CURRENT_TEST" 2>&1 1>&3)
+			FAILED_TESTS_THIS_RUN=$?
+			determine_successful_tests_this_run
+			TOTAL_SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS_THIS_RUN + $TOTAL_SUCCESSFUL_TESTS`
+			TOTAL_FAILED_TESTS=`expr $FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
 		fi
-
 	fi
-
-	echo	# line feed
-
 done
-echo "-------------------INDIVIDUAL TESTS-------------------"
 
-echo	# line feed
+exec 3>&- # clear FD
+
 echo "-------------------TESTS SUMMARY-------------------"
-if [ $SUCCESSFUL_TESTS -gt 0 ]; then
-	echo "${green_color}$SUCCESSFUL_TESTS passed${reset_color}"
+if [ $TOTAL_SUCCESSFUL_TESTS -gt 0 ]; then
+	echo "${green_color}$TOTAL_SUCCESSFUL_TESTS tests passed${reset_color}"
 else
-	echo "$SUCCESSFUL_TESTS passed${reset_color}"
+	echo "$TOTAL_SUCCESSFUL_TESTS tests passed"
 fi
-if [ $FAILED_TESTS -gt 0 ]; then
-	echo "${red_color}$FAILED_TESTS failed${reset_color}"
+if [ $TOTAL_FAILED_TESTS -gt 0 ]; then
+	echo "${red_color}$TOTAL_FAILED_TESTS tests failed${reset_color}"
 else
-	echo "$FAILED_TESTS failed${reset_color}"
+	echo "$TOTAL_FAILED_TESTS tests failed"
 fi
 echo "-------------------TESTS SUMMARY-------------------"
+
+exit $TOTAL_FAILED_TESTS
 
